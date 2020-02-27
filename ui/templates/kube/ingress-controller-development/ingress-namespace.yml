@@ -1,0 +1,4 @@
+apiVersion: {{K8_API_VERSION}}
+kind: Namespace
+metadata:
+  name: ingress

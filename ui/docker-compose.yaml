@@ -1,0 +1,105 @@
+version: "3.6"
+
+x-logging-1: &default-logging
+  options:
+    max-size: "1m"
+    max-file: "5"
+  driver: json-file
+
+services:
+  proxy:
+    image: jwilder/nginx-proxy:alpine-0.7.0
+    ports:
+      - ${DEFAULT_PROXY_SERVICE_PORT:?DEFAULT_PROXY_SERVICE_PORT}:80
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - default
+
+  velocity-web:
+    build:
+      context: .
+      dockerfile: docker/web/Dockerfile
+    image: ${IMAGE_NAME_PREFIX:?IMAGE_NAME_PREFIX}/velocity-web:${WEB_IMAGE_SUFFIX:-latest}
+    env_file:
+      - ${PWD:?PWD}/.env
+    environment:
+      VIRTUAL_HOST: web.${DEFAULT_PROXY_DOMAIN:?DEFAULT_PROXY_DOMAIN}
+    expose:
+      - 80
+    networks:
+      - default
+    logging: *default-logging
+    networks:
+    - default
+  
+  dev-box:
+    build:
+      context:  . # root of project
+      dockerfile: ./docker/dev_box/Dockerfile
+      args:
+        DEVBOX_USER_NAME: ${DEVBOX_USER_NAME:?DEVBOX_USER_NAME}
+        DEVBOX_USER_UID: ${DEVBOX_USER_UID:?DEVBOX_USER_UID}
+        DEVBOX_USER_GUID: ${DEVBOX_USER_GUID:?DEVBOX_USER_GUID}
+        DEVBOX_PWD: ${DEVBOX_USER_WORKDIR:?DEVBOX_USER_WORKDIR}
+    image: ${IMAGE_NAME_PREFIX:?IMAGE_NAME_PREFIX}/velocity-dev-box:${DEV_BOX_IMAGE_SUFFIX:-latest}
+    command: /bin/bash
+    hostname: velocity-dev-box
+    env_file:
+    - ${PWD:?PWD}/.env
+    environment:
+      COMPOSE_PROJECT_NAME: velocity-dev-box${COMPOSE_PROJECT_NAME:?COMPOSE_PROJECT_NAME}
+      PYTHONPATH: ${DEVBOX_USER_WORKDIR:?DEVBOX_USER_WORKDIR}
+      IN_DEVBOX_CONTAINER: 'true'
+      DEPLOYMENT_TYPE: ${DEPLOYMENT_TYPE:?DEPLOYMENT_TYPE}
+      DEFAULT_PROXY_DOMAIN: ${DEFAULT_PROXY_DOMAIN:?DEFAULT_PROXY_DOMAIN}
+      IMAGE_NAME_PREFIX: ${IMAGE_NAME_PREFIX:?IMAGE_NAME_PREFIX}
+      PATH: /velocity/node_modules/.bin:$PATH
+    volumes:
+    - ${DEVBOX_HOST_USER_HOME:?DEVBOX_HOST_USER_HOME}/:/home/${DEVBOX_USER_NAME:?DEVBOX_USER_NAME}
+    - /var/run/docker.sock:/var/run/docker.sock
+    - /tmp:/tmp
+    - dev-box-node-modules:/velocity
+    privileged: true
+    working_dir: ${DEVBOX_USER_WORKDIR:?DEVBOX_USER_WORKDIR}
+    logging: *default-logging
+    networks:
+    - default
+
+  dev-web:
+    build:
+      context:  . # root of project
+      dockerfile: ./docker/dev_box/Dockerfile
+      args:
+        DEVBOX_USER_NAME: ${DEVBOX_USER_NAME:?DEVBOX_USER_NAME}
+        DEVBOX_USER_UID: ${DEVBOX_USER_UID:?DEVBOX_USER_UID}
+        DEVBOX_USER_GUID: ${DEVBOX_USER_GUID:?DEVBOX_USER_GUID}
+        DEVBOX_PWD: ${DEVBOX_USER_WORKDIR:?DEVBOX_USER_WORKDIR}
+    image: ${IMAGE_NAME_PREFIX:?IMAGE_NAME_PREFIX}/velocity-box:${DEV_BOX_IMAGE_SUFFIX:-latest}
+    command: /bin/bash -c "cd rubrik && npm start"
+    env_file:
+      - ${PWD:?PWD}/.env
+    environment:
+      VIRTUAL_HOST: dev.web.${DEFAULT_PROXY_DOMAIN:?DEFAULT_PROXY_DOMAIN}
+      PATH: /velocity/node_modules/.bin:$PATH
+    volumes:
+      - ${DEVBOX_HOST_USER_HOME:?DEVBOX_HOST_USER_HOME}/:/home/${DEVBOX_USER_NAME:?DEVBOX_USER_NAME}
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /tmp:/tmp
+      - dev-box-node-modules:/velocity
+    expose:
+      - 3000
+    working_dir: ${DEVBOX_USER_WORKDIR:?DEVBOX_USER_WORKDIR}
+    logging: *default-logging
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge
+    name: ${DEFAULT_NEWORKNAME:?DEFAULT_NEWORKNAME}
+
+volumes:
+  dev-box-node-modules:
+    driver: local
+    name: ${DEVBOX_NODE_MODLE_SHARE_NAME:?DEVBOX_NODE_MODLE_SHARE_NAME}

@@ -1,0 +1,17 @@
+apiVersion: {{K8_INGRESS_API_VERSION}}
+kind: Ingress
+metadata:
+  name: {{VELOCITY_INGRESS_RULE_NAME}}
+  namespace: {{k8_NAMESPACE}}
+  annotations:
+    INGRESS.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: web.{{DEFAULT_PROXY_DOMAIN}}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: {{VELOCITY_APP_SERVICE_NAME}}
+          servicePort: {{VELOCITY_APP_SERVICE_PORT}}
+

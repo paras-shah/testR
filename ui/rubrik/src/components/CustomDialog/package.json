@@ -1,0 +1,6 @@
+{
+  "name": "Labgenerator",
+  "version": "0.0.0",
+  "private": true,
+  "main": "LabGenerator.js"
+}

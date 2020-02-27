@@ -1,0 +1,230 @@
+#!/usr/bin/env python3
+import argparse
+import getpass
+import json
+import os
+import subprocess
+from sys import platform
+
+BASE_DIR = os.path.abspath(
+    os.path.dirname("{0}/../../".format(os.path.abspath(__file__)))
+)
+
+os.chdir(BASE_DIR)
+
+
+def _(command, rc=0):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+    print("=" * 79)
+    print("cmd: {0}".format(command))
+    while True:
+        output = process.stdout.readline()
+        if output == b"" and process.poll() is not None:
+            break
+        if output:
+            print("\t{0}".format(output.decode().strip()))
+    _rc = process.poll()
+    if _rc:
+        assert rc == _rc, "Return code {0}".format(_rc)
+    print("-" * 79)
+    return _rc
+
+
+def __(command, rc=0):
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
+    _rc = process.poll()
+    if _rc:
+        assert rc == _rc, "Return code {0}".format(_rc)
+    return [i.strip().decode() for i in process.stdout.readlines()]
+
+
+def configure_mac():
+    if not __("python3 -m pip show pyaml"):
+        _("python3 -m pip install pyaml")
+        print("*" * 79)
+        print("!!!Installed pyaml, run again....!!!")
+        print("*" * 79)
+        exit(-1)
+
+    if not __("python3 -m pip show docker-compose"):
+        _("python3 -m pip install docker-compose")
+        print("*" * 79)
+        print("!!!Installed docker-compose, run again....!!!")
+        print("*" * 79)
+        exit(-1)
+
+    if not __("ls /usr/local/Cellar/dnsmasq"):
+        __("brew install dnsmasq")
+
+    if not __("grep 'address=/localhost/127.0.0.1' /usr/local/etc/dnsmasq.conf"):
+        print("*" * 79)
+        print(
+            "!!! Warning dnsmasq is not configured correctly, fixing things to work with project!!!"
+        )
+        print("*" * 79)
+
+        if os.path.exists("/usr/local/etc/dnsmasq.conf"):
+            _("sudo cp -f /usr/local/etc/dnsmasq.conf /usr/local/etc/dnsmasq.conf.orig")
+        else:
+            _("sudo touch /usr/local/etc/dnsmasq.conf ")
+        _("echo 'listen-address=127.0.0.1' | sudo tee -a /usr/local/etc/dnsmasq.conf")
+        _(
+            "echo 'address=/localhost/127.0.0.1' | sudo tee -a /usr/local/etc/dnsmasq.conf"
+        )
+        _(
+            "echo 'address=/{0}/127.0.0.1' | sudo tee -a /usr/local/etc/dnsmasq.conf".format(
+                os.uname()[1]
+            )
+        )
+        _(
+            "sudo cp $(brew list dnsmasq | grep /homebrew.mxcl.dnsmasq.plist$) /Library/LaunchDaemons/"
+        )
+        _("sudo launchctl load /Library/LaunchDaemons/homebrew.mxcl.dnsmasq.plist")
+        _("sudo launchctl stop homebrew.mxcl.dnsmasq")
+        _("sudo launchctl start homebrew.mxcl.dnsmasq")
+        _("sudo mkdir -p /etc/resolver")
+        _(
+            "sudo echo 'nameserver 127.0.0.1' | sudo tee /etc/resolver/{0}".format(
+                os.uname()[1]
+            )
+        )
+        _("sudo echo 'nameserver 127.0.0.1' | sudo tee /etc/resolver/localhost")
+
+    if not __("which docker"):
+        _("brew cask install docker")
+        print("*" * 79)
+        print(
+            "!!!Installed docker, make sure its running before running things again....!!!"
+        )
+        print("*" * 79)
+        exit(-1)
+
+
+def configure_linux():
+    if not __("python3 -m pip show pyaml"):
+        _("sudo python3 -m pip install pyaml")
+        print("*" * 79)
+        print("!!!Installed pyaml, run again....!!!")
+        print("*" * 79)
+        exit(-1)
+
+    if not __("python3 -m pip show docker-compose"):
+        _("sudo python3 -m pip install docker-compose")
+        print("*" * 79)
+        print("!!!Installed docker-compose, run again....!!!")
+        print("*" * 79)
+        exit(-1)
+
+    if not __("which dnsmasq"):
+        __("sudo apt-get install -y dnsmasq")
+
+    if os.path.exists("/etc/dnsmasq.conf"):
+        print("dnsmasq.conf already exists, do not need to create it.")
+        pass
+    else:
+        _("sudo touch /etc/dnsmasq.conf")
+    if not __("grep 'address=/.localhost/127.0.0.1' /etc/dnsmasq.conf"):
+        print("*" * 79)
+        print(
+            "!!! Warning dnsmasq is not configured correctly, fixing things to work with project!!!"
+        )
+        print("*" * 79)
+
+        _("sudo cp /etc/dnsmasq.conf /etc/dnsmasq.conf.orig")
+        _("echo 'listen-address=127.0.0.1' | sudo tee -a /etc/dnsmasq.conf")
+        _("echo 'address=/.localhost/127.0.0.1' | sudo tee -a /etc/dnsmasq.conf")
+        _(
+            "echo 'address=/.{0}/127.0.0.1' | sudo tee -a /etc/dnsmasq.conf".format(
+                os.uname()[1]
+            )
+        )
+        if os.path.exists("/etc/resolvconf/resolv.conf.d/base"):
+            _(
+                "sudo cp /etc/resolvconf/resolv.conf.d/base /etc/resolvconf/resolv.conf.d/base.orig"
+            )
+        else:
+            _("sudo mkdir -p /etc/resolvconf/resolv.conf.d/")
+            _("sudo touch /etc/resolvconf/resolv.conf.d/base")
+        _(
+            "echo 'nameserver 127.0.0.1' | sudo tee -a /etc/resolvconf/resolv.conf.d/base"
+        )
+        _("sudo service dnsmasq restart")
+
+    if not __("which docker"):
+        _(
+            "cd /tmp && curl -fsSL https://get.docker.com -o get-docker.sh && sudo sh get-docker.sh"
+        )
+        _("sudo usermod -aG docker {0}".format(getpass.getuser()))
+
+        print("*" * 79)
+        print("!!!Logout from your current shell and login back to continue....!!!")
+        print("*" * 79)
+        exit(-1)
+    if os.path.exists("/etc/docker/daemon.json"):
+        pass
+    else:
+        _("sudo touch /etc/docker/daemon.json")
+    if not __("sudo grep dns /etc/docker/daemon.json"):
+        print("*" * 79)
+        print(
+            "!!!Error: You do not have custom dns entry,"
+            "they are required for this stack to work.!!!"
+        )
+        print(
+            """Sample /etc/docker/daemon.json might look like this.
+             {
+                "dns":["10.0.1.21","10.0.1.23","8.8.8.8"]
+             }
+            """
+        )
+        print("Creating it for you, dont worry")
+        _(
+            'printf "{\n"dns":["10.0.1.21","10.0.1.23","8.8.8.8"]\n}" | sudo tee -a /etc/docker/daemon.json >/dev/null'
+        )
+        print("*" * 79)
+
+
+def env_setup():
+    if platform == "darwin":
+        configure_mac()
+    else:
+        configure_linux()
+
+
+def main(args):
+    if getpass.getuser() == "root":
+        print("*" * 79)
+        print("!!!Running as root not supported!!!")
+        print("*" * 79)
+        exit(-1)
+
+    if json.loads(os.environ.get("IN_DEVBOX_CONTAINER", "false")):
+        print("\tError!!!! Running in nested container env not supported")
+        exit(-1)
+
+    env_setup()
+    _("{0}/bin/env_generator.py".format(BASE_DIR))
+    _("docker-compose build dev-box")
+
+    if args.deploy_only:
+        subprocess.call(
+            [
+                "/bin/bash",
+                "-i",
+                "-c",
+                ":;" + "docker-compose run --rm dev-box bin/deploy",
+            ]
+        )
+        return
+
+    subprocess.call(["/bin/bash", "-i", "-c", ":;" + "docker-compose run --rm dev-box"])
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--deploy_only", action="store_true", help="Deploy and exit", default=False
+    )
+    args = parser.parse_args()
+    main(args)
+    exit(0)

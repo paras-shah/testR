@@ -1,0 +1,40 @@
+COMPOSE_PROJECT_NAME: # If Empty its directory name of this file
+DEPLOYMENT_TYPE: development # development || production
+IMAGE_NAME_PREFIX: gcr.io/cloud-eng-248218/rubrik-cloudeng-dev/velocity
+IMAGE_REGISTRY_SECRET: gcr-json-key
+
+DEVBOX_USER_NAME: # If empty its current user of shell
+DEVBOX_USER_UID: # If empty its current user uid
+DEVBOX_USER_GUID: # If empty its current user guid
+DEVBOX_HOST_USER_HOME: # If emtpy its $HOME
+DEVBOX_HOST_USER_WORKDIR: # If empty its $PWD
+DEVBOX_USER_WORKDIR: # If empty its $PWD, with adjustment based on if its MAC or Linux
+#Change if you want two different instances of velocity projects,say branch based development
+DEVBOX_NODE_MODLE_SHARE_NAME: velocity-dev-box-node-modules
+
+DEFAULT_PROXY_DOMAIN: # If empty will be the hostname/ip of the device
+DEFAULT_PROXY_SERVICE_PORT: 80
+DEFAULT_NEWORKNAME: velocity
+
+# K8 configs 
+K8_VELOCITY_LABEL: velocity-app
+k8_NAMESPACE: velocity
+K8_DEPLOYMENT_API_VERSION: apps/v1
+K8_API_VERSION: v1
+K8_INGRESS_API_VERSION : networking.k8s.io/v1beta1
+
+#CONFIGS
+VELOCITY_CONFIGMAP_NAME: velocity-config-env-file
+
+# VELOCITY APP
+VELOCITY_APP_NAME: velocity
+VELOCITY_APP_DEPLOYMENT_NAME: velocity-web
+VELOCITY_APP_SELECTOR: velocity-web
+VELOCITY_APP_SERVICE_NAME: velocity-web
+VELOCITY_APP_SERVICE_PORT: 80
+
+#INGRESS
+VELOCITY_INGRESS_RULE_NAME: velocity-ingress
+
+# Namespace
+INGRESS_NAME_SPACE: ingress

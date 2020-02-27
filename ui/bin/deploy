@@ -1,0 +1,50 @@
+#!/usr/bin/env python3
+import argparse
+import atexit
+import os
+import subprocess
+import time
+import uuid
+
+import plumbum
+import deploy_compose
+import deploy_k8
+
+if __name__ == '__main__':
+    BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    os.chdir(BASE_DIR)
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--tail_log',
+        action='store_true',
+        help="Tail logs after deployment",
+        default=False
+    )
+    parser.add_argument(
+        '--k8',
+        action='store_true',
+        help="Deplot K8",
+        default=False
+    )
+    parser.add_argument(
+        '--reset_hard',
+        action='store_true',
+        help="Wipes application data as well, only applicable for development mode",
+        default=False
+    )
+    parser.add_argument(
+        '--deployment_server',
+        help="Remote server where deployment will happen, Format user@host",
+        required=False
+    )
+    parser.add_argument(
+        '--service_info',
+        help="Print service info",
+        action='store_true',
+        default=False
+    )
+    args = parser.parse_args()
+    if args.k8:
+        deploy_k8.main(args)
+    else:
+        deploy_compose.main(args)

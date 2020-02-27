@@ -1,0 +1,255 @@
+{
+	"count": 1,
+	"next": null,
+	"previous": null,
+	"results": [
+		{
+			"id": "629b63aa-23bd-432b-aa3b-9bf6ce73da33",
+			"start_date": "2020-02-26 06:45:26.643504+00:00",
+			"end_date": "2020-02-28 06:45:26.643504+00:00",
+			"created_date": "2020-02-26 06:40:18.287318+00:00",
+			"params": {
+				"lab_template": "d39da200-b3cd-4f2e-b6c1-f376ed4a3aa3",
+				"instance_name": "Test Two"
+			},
+			"priority": "Normal",
+			"instance_for": "paras.shah@rubrik.com",
+			"status": "Ready",
+			"status_message": "Lab is ready to use.",
+			"lab_template": "labs/ansible_lab_101:TechOps California:scv4:version.1.0.0",
+			"lab_details": {
+				"Services": {
+					"JumpHostRdp": {
+						"Credentials": {
+							"Password": "scaledata!@34",
+							"Username": "Administrator"
+						},
+						"Internal": {
+							"Port": "3389",
+							"IP": "192.168.2.132"
+						},
+						"Protocol": "rdp",
+						"External": {
+							"Port": "36103",
+							"IP": "34.82.139.7"
+						}
+					},
+					"LinuxHost-4-Ssh": {
+						"Credentials": {
+							"Password": "rubrik_automation@30secs",
+							"Username": "rubrik_automation"
+						},
+						"Internal": {
+							"Port": "2222",
+							"IP": "192.168.2.129"
+						},
+						"Protocol": "ssh",
+						"External": {
+							"Port": "23577",
+							"IP": "34.82.139.7"
+						}
+					},
+					"LinuxHost-3-Ssh": {
+						"Credentials": {
+							"Password": "rubrik_automation@30secs",
+							"Username": "rubrik_automation"
+						},
+						"Internal": {
+							"Port": "2222",
+							"IP": "192.168.2.130"
+						},
+						"Protocol": "ssh",
+						"External": {
+							"Port": "51574",
+							"IP": "34.82.139.7"
+						}
+					},
+					"LinuxHost-1-Ssh": {
+						"Credentials": {
+							"Password": "rubrik_automation@30secs",
+							"Username": "rubrik_automation"
+						},
+						"Internal": {
+							"Port": "2222",
+							"IP": "192.168.2.131"
+						},
+						"Protocol": "ssh",
+						"External": {
+							"Port": "23665",
+							"IP": "34.82.139.7"
+						}
+					},
+					"LinuxHost-2-Ssh": {
+						"Credentials": {
+							"Password": "rubrik_automation@30secs",
+							"Username": "rubrik_automation"
+						},
+						"Internal": {
+							"Port": "2222",
+							"IP": "192.168.2.127"
+						},
+						"Protocol": "ssh",
+						"External": {
+							"Port": "60995",
+							"IP": "34.82.139.7"
+						}
+					}
+				},
+				"LabConsoleUrl": "http://629b63aa-23bd-432b-aa3b-9bf6ce73da33.console.34.82.139.7.nip.io/guacamole"
+			},
+			"lab-actions": [
+				{
+					"action_name": "Power Control",
+					"action_help": "To turn off a lab",
+					"action_params": null
+				},
+				{
+					"action_name": "Snapshots",
+					"action_help": "Take a snapshot of lab",
+					"action_params": [
+						{
+							"help": "",
+							"name": "snapshot_name",
+							"label": "Snapshot Name",
+							"value": "",
+							"required": "true"
+						}
+					]
+				},
+				{
+					"action_name": "Restore",
+					"action_help": "To restore to a snapshot",
+					"action_params": [
+						{
+							"help": "Select a snapshot",
+							"name": "snapshot_name",
+							"label": "Select a snapshot",
+							"value": [
+								1,
+								2,
+								3
+							],
+							"required": "true"
+						}
+					]
+				},
+				{
+					"action_name": "Clone",
+					"action_help": "To clone a lab instance",
+					"action_params": [
+						{
+							"help": "",
+							"name": "instance_name",
+							"label": "Instance Name",
+							"value": true,
+							"required": "true"
+						}
+					]
+				}
+			],
+			"resources": [
+				{
+					"name": "VM1",
+					"id": "resource_id_one",
+					"details": {
+						"ip": "111.111.111.111"
+					},
+					"actions": [
+						{
+							"action_name": "Power Control",
+							"action_help": "To turn off a vm",
+							"action_params": null
+						},
+						{
+							"action_name": "Snapshots",
+							"action_help": "Take a snapshot of vm",
+							"action_icons": "",
+							"action_params": [
+								{
+									"help": "",
+									"name": "snapshot_name",
+									"label": "Snapshot Name",
+									"value": "",
+									"required": "true"
+								},
+								{
+									"help": "",
+									"name": "Snapshot Details",
+									"label": "Snapshot Name",
+									"value": "",
+									"required": "true"
+								},
+								{
+									"help": "",
+									"name": "Snapshot Details",
+									"label": "Snapshot Name",
+									"value": "",
+									"required": "true"
+								}
+							]
+						},
+						{
+							"action_name": "Restore",
+							"action_help": "To restore to a vm snapshot",
+							"action_params": [
+								{
+									"help": "Select a snapshot",
+									"name": "snapshot_name",
+									"label": "Select a vm snapshot",
+									"value": [
+										1,
+										2,
+										3
+									],
+									"required": "true"
+								}
+							]
+						},
+						{
+							"action_name": "Clone",
+							"action_help": "To clone a vm instance",
+							"action_params": [
+								{
+									"help": "",
+									"name": "vm_instance_name",
+									"label": "Instance Name",
+									"value": true,
+									"required": "true"
+								}
+							]
+						},
+						{
+							"action_name": "Suspend",
+							"action_help": "To suspend vm instance",
+							"action_params": [
+								{
+									"help": "",
+									"name": "instance_name",
+									"label": "Instance Name",
+									"value": null,
+									"required": "true"
+								}
+							]
+						},
+						{
+							"action_name": "Off",
+							"action_help": "To turn off a vm instance",
+							"action_params": null
+						}
+					]
+				}
+			],
+			"lab_template_name": "Ansible Lab 101",
+			"lab_template_version": "version.1.0.0",
+			"lab_template_logo": "data:image/png;base64,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",
+			"description": {
+				"short": "Fast and easy way to know about Ansible and play with a few hosts.",
+				"long": "## Welcome to Ansible Lab 101\n\nIn this lab you will get to know Ansible and manage multiple hosts.\n\n* 4 X Ubuntu 16.04\n* 1 X JumpHost Windows\n\n## Resource Details\n\n1. Lab once deployed can be accessed via **web console** or **JumpHostRdp** Service Endpoint.\n1. Lab exposes several endpoints which gives you access to systems running inside the lab using native tools like **RDP CLient** or **Terminal**. \n\n"
+			},
+			"vdu_id": "fee5e4ba-ee79-4485-a312-9d7255bcd2e0",
+			"vdu_name": "TechOps California",
+			"datacenter": "scv4",
+			"time_remaining": "8:30:32"
+		}
+	]
+}

@@ -1,0 +1,170 @@
+#!/usr/bin/env python3
+import copy
+import getpass
+import os
+import pwd
+import json
+import six
+from os.path import expanduser
+from sys import platform
+import subprocess
+import platform as p
+import yaml
+import argparse
+
+
+BASE_DIR = os.path.abspath(os.path.dirname("{0}/../../".format(os.path.abspath(__file__))))
+ENV_TEMPLATE_FILE = "{0}/env_template.yaml".format(BASE_DIR)
+ENV_TEMPLATE_FILE_OVERRIDE = "{0}/env_template_override.yaml".format(BASE_DIR)
+ENV_FILE = "{0}/.env".format(BASE_DIR)
+SUPPORTED_DEPLOYMENT_TYPE = {"development", "production"}
+os.chdir(BASE_DIR)
+
+
+def get_default_interface():
+    interface = subprocess.check_output(
+        ["bash", "-c", "/sbin/route -n | grep '^0.0.0.0' | awk '{print $8}'"]
+    ).strip()
+    if not interface:
+        raise RuntimeError("Can not find interface name")
+    if type(interface) == bytes:
+        return interface.decode()
+    return interface
+
+
+def get_host_ipv4_on_interface(interface):
+    release = p.linux_distribution()
+    if release[0] == "Ubuntu":
+        if release[1] == "16.04":
+            ipv4 = subprocess.check_output(
+                [
+                    "bash",
+                    "-c",
+                    "/sbin/ifconfig {0} | grep -i Mask| awk '{{print $2}}' | awk -F: '{{print $2}}'".format(
+                        interface
+                    ),
+                ]
+            ).strip()
+        elif release[1] == "18.04":
+            ipv4 = subprocess.check_output(
+                [
+                    "bash",
+                    "-c",
+                    "/sbin/ifconfig {0} | grep -i Mask| awk '{{print $2}}'".format(interface),
+                ]
+            ).strip()
+    elif platform == "darwin":
+        ipv4 = subprocess.check_output(
+            [
+                "bash",
+                "-c",
+                "/sbin/ifconfig {0} | grep -i Mask| awk '{{print $2}}'".format(interface),
+            ]
+        ).strip()
+
+    if not ipv4:
+        raise RuntimeError("Can not find ipv4 for interface {0}".format(interface))
+    if type(ipv4) == bytes:
+        return ipv4.decode()
+    return ipv4
+
+
+def update_env_config(env_config):
+    env_config = copy.deepcopy(env_config)
+    assert (
+        env_config["DEPLOYMENT_TYPE"] in SUPPORTED_DEPLOYMENT_TYPE
+    ), "Not Supported development type {0}".format(SUPPORTED_DEPLOYMENT_TYPE)
+
+    if env_config["COMPOSE_PROJECT_NAME"] is None:
+        env_config["COMPOSE_PROJECT_NAME"] = os.path.split(BASE_DIR)[1]
+
+    if env_config["DEVBOX_USER_NAME"] is None:
+        env_config["DEVBOX_USER_NAME"] = getpass.getuser()
+
+    if env_config["DEVBOX_USER_UID"] is None:
+        env_config["DEVBOX_USER_UID"] = pwd.getpwnam(getpass.getuser()).pw_uid
+        if platform == "darwin":
+            env_config["DEVBOX_USER_UID"] = 1000
+
+    if env_config["DEVBOX_USER_GUID"] is None:
+        env_config["DEVBOX_USER_GUID"] = pwd.getpwnam(getpass.getuser()).pw_gid
+        if platform == "darwin":
+            env_config["DEVBOX_USER_GUID"] = 1000
+
+    if env_config["DEVBOX_HOST_USER_HOME"] is None:
+        env_config["DEVBOX_HOST_USER_HOME"] = expanduser("~")
+
+    if env_config["DEVBOX_USER_WORKDIR"] is None:
+        env_config["DEVBOX_USER_WORKDIR"] = os.getcwd()
+        if platform == "darwin":
+            cwd = os.getcwd().replace(
+                expanduser("~"), "/home/{0}".format(env_config["DEVBOX_USER_NAME"])
+            )
+            env_config["DEVBOX_USER_WORKDIR"] = cwd
+
+    if env_config["DEVBOX_HOST_USER_WORKDIR"] is None:
+        env_config["DEVBOX_HOST_USER_WORKDIR"] = os.getcwd()
+
+    if env_config["DEFAULT_PROXY_DOMAIN"] is None:
+        defaultProxyDomain = None
+        if platform == "darwin":
+            defaultProxyDomain = "{0}.{1}".format(
+                env_config.get("DEFAULT_NEWORKNAME"), os.uname()[1]
+            )
+        else:
+            defaultProxyDomain = "{0}.{1}.nip.io".format(
+                env_config.get("DEFAULT_NEWORKNAME"),
+                get_host_ipv4_on_interface(get_default_interface()),
+            )
+        env_config["DEFAULT_PROXY_DOMAIN"] = defaultProxyDomain.lower()
+
+    if env_config["IMAGE_NAME_PREFIX"] is None:
+        env_config["IMAGE_NAME_PREFIX"] = os.uname()[1] + "/" + os.path.split(BASE_DIR)[1]
+
+    return env_config
+
+
+def is_json_data_type(v):
+    return (
+        isinstance(v, float)
+        or isinstance(v, six.integer_types)
+        or isinstance(v, six.string_types)
+        or isinstance(v, six.text_type)
+        or isinstance(v, bool)
+        or v is None
+    )
+
+
+def get_dict_from_env_file(env_file):
+    envData = {}
+    with open(env_file, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            key, val = line.split("=", 1)
+            envData[key.strip()] = val.strip()
+    return envData
+
+
+def write_env_file(env_config, env_file):
+    with open(env_file, "w") as f:
+        f.write("# Auto-generated by env_generator\n")
+        for k, v in env_config.items():
+            if is_json_data_type(v):
+                f.write("{0}={1}\n".format(k, v))
+            else:
+                f.write("{0}={1}\n".format(k, json.dumps(v)))
+
+
+def main():
+    env_config = yaml.safe_load(open(ENV_TEMPLATE_FILE))
+    if os.path.exists(ENV_TEMPLATE_FILE_OVERRIDE):
+        env_config.update(yaml.safe_load(open(ENV_TEMPLATE_FILE_OVERRIDE)))
+
+    env_config = update_env_config(env_config)
+    write_env_file(env_config, ENV_FILE)
+
+
+if __name__ == "__main__":
+    main()

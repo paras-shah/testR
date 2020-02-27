@@ -1,0 +1,44 @@
+apiVersion: {{K8_API_VERSION}}
+kind: Service 
+metadata:
+  name: {{VELOCITY_APP_SERVICE_NAME}}
+  namespace: {{k8_NAMESPACE}}
+  labels:
+      name: {{K8_VELOCITY_LABEL}}
+      app: {{VELOCITY_APP_SELECTOR}}
+spec:
+  ports:
+  - name: {{VELOCITY_APP_SERVICE_NAME}}
+    port: {{VELOCITY_APP_SERVICE_PORT}}
+    protocol: TCP
+    targetPort: {{VELOCITY_APP_SERVICE_PORT}}
+  selector:
+    app:  {{VELOCITY_APP_SELECTOR}}
+---
+
+apiVersion: {{K8_DEPLOYMENT_API_VERSION}}
+kind: Deployment
+metadata:
+  name: {{VELOCITY_APP_DEPLOYMENT_NAME}}
+  namespace: {{k8_NAMESPACE}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{VELOCITY_APP_SELECTOR}}
+  template:
+    metadata:
+      labels:
+        app: {{VELOCITY_APP_SELECTOR}}
+    spec:
+      imagePullSecrets:
+        - name: {{IMAGE_REGISTRY_SECRET}}
+      containers:
+        - name: {{VELOCITY_APP_DEPLOYMENT_NAME}}
+          imagePullPolicy: IfNotPresent
+          image: {{IMAGE_NAME_PREFIX}}/velocity-web:{{WEB_IMAGE_SUFFIX}}
+          ports:
+            - containerPort: {{VELOCITY_APP_SERVICE_PORT}}
+          envFrom:
+            - configMapRef:
+                name: {{VELOCITY_CONFIGMAP_NAME}}

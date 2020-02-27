@@ -1,0 +1,9 @@
+apiVersion: {{K8_API_VERSION}}
+kind: ConfigMap
+metadata:
+  name: nginx-ingress-controller-conf
+  namespace: ingress
+  labels:
+    app: nginx-ingress-lb
+data:
+  enable-vts-status: 'true'

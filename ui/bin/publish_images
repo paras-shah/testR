@@ -1,0 +1,29 @@
+#!/usr/bin/env python3
+import getpass
+import json
+import os
+
+from bin.common import build_and_tag
+from bin.common import get_image_map
+from bin.common import push_images
+
+
+def main():
+    if getpass.getuser() == 'root':
+        print('*' * 79)
+        print('!!!Running as root not supported!!!')
+        print('*' * 79)
+        exit(-1)
+
+    if not json.loads(os.environ.get('IN_DEVBOX_CONTAINER', 'false')):
+        print('\tError!!!! Running in supported only in devbox container')
+        exit(-1)
+
+    image_map = get_image_map()
+    build_and_tag(image_map)
+    push_images(image_map)
+
+
+if __name__ == '__main__':
+    main()
+    exit(0)
