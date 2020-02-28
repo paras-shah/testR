@@ -413,7 +413,7 @@ export function signInAction(username, password) {
                     payload: {
                         username: data.user.username,
                         isAuthenticated: true,
-                        errorMessage: null
+                        message: null
                     }
                 });
                 history.push(WEBPAGE_URL.PAGE_LANDING_URL);
@@ -439,29 +439,26 @@ Functionality:
 export function signUpAction(email, eventCode) {
     // const isAuthenticated = localStorage.getItem(LOCAL_STORAGE.SESSION) ? true : false;
     const axiosClient = axiosJwtTokenAPI(false);
+    let errorMessage ='';
     return async dispatch => {
         await axiosClient
             .post(API_URL.EVENT_REGISTRATION_API, {
                 email: email,
-                eventCode: eventCode
+                invite_code: eventCode
             })
             .then(({ data }) => {
-                localStorage.removeItem(LOCAL_STORAGE.SELECTED_VDU);
-                localStorage.setItem(LOCAL_STORAGE.SESSION, data.token);
-                localStorage.setItem(
-                    LOCAL_STORAGE.USERNAME,
-                    data.user.username
-                );
-
+                if(data.hasOwnProperty("register") &&  data.register ){
+                    errorMessage = `${data.email} - ${data.message}. Please go to RCF site by clicking the Rubrik logo. Thanks!` 
+                }else{
+                    errorMessage = `${data.message}`; 
+                }
+                
                 dispatch({
-                    type: SIGN_IN,
+                    type: SIGN_OUT,
                     payload: {
-                        username: data.user.username,
-                        isAuthenticated: true,
-                        errorMessage: null
+                        message: errorMessage
                     }
                 });
-                history.push(WEBPAGE_URL.PAGE_LANDING_URL);
             })
             .catch(error => {
                 handleTryCatchError(
@@ -491,7 +488,7 @@ export function magicLinkAction(email) {
                 dispatch({
                     type: MAGIC_LINK_SENT,
                     payload: {
-                        errorMessage: data.message
+                        message: data.message
                     }
                 });
             })
@@ -518,7 +515,7 @@ export function signOutAction() {
         dispatch({
             type: SIGN_OUT,
             payload: {
-                errorMessage: "Sign out successfully"
+                message: "Sign out successfully"
             }
         });
         history.push(WEBPAGE_URL.LOGIN);
@@ -586,7 +583,7 @@ export function validateTokenAction(magicToken) {
                     payload: {
                         username: data.user.username,
                         isAuthenticated: true,
-                        errorMessage: null
+                        message: null
                     }
                 });
             })

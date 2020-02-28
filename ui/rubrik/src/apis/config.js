@@ -28,7 +28,8 @@ export const CONSOLE_REFRESH_INTERVAL = 1000 * 10;
 export const JWT_API_CALL_INTERVAL = 1000 * 10;
 
 // APIs
- export const VISION_CORE_URL = `https://vision.rcf.rubrik.com/api`;
+// export const VISION_CORE_URL = `https://vision.rcf.rubrik.com/api`;
+export const VISION_CORE_URL = `//web.vision.10.0.192.233.nip.io/api`;
 
 export const JWT_AUTH_HEADER_PREFIX = "BEARER";
 
@@ -38,8 +39,8 @@ export const API_URL = {
     LAB_INSTANCE: `/rubrik.vision.core/lab_template_instance/`,
     LAB_TEMPLATE_BY_VDU: `/rubrik.vision.core/lab_template_by_vdu/`,
     LAB_VDU: `/rubrik.vision.core/virtualdatacenterunit/`,
-    EVENT_REGISTRATION_API: "/rubrik.vision.core/eventregistration/",
-    PERFORM_LAB_ACTIONS:"/rubrik.vision.core/perform_lab_actions/",
+    EVENT_REGISTRATION_API: "/rubrik.vision.core/invitecoderegistrant/",
+    PERFORM_LAB_ACTIONS: "/rubrik.vision.core/perform_lab_actions/",
 
     LAB_INSTANCE_DETAIL: `/rubrik.vision.core/labinstancedetail/`,
     DELETE_LAB_INSTANCE: `/rubrik.vision.core/destroy_lab_template_instance`,
@@ -60,7 +61,7 @@ export const LAB_STATUS = {
     READY: "Ready",
     PENDING_RELEASE: "Pending Release",
     DESTROY: "Destroy",
-    PROCESSINGFAILED: "Processing Failed" 
+    PROCESSINGFAILED: "Processing Failed"
 };
 
 export const FONT_AWESOME = {
